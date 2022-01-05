@@ -1,0 +1,73 @@
+#### Installations
+
+- Nginx Installation
+User_data already did most of the configuration. Just ensure to set SELinux to Permissive
+sudo setenforce Permissive
+
+- Tooling Installation
+sudo mkdir /var/www/
+
+
+
+
+sudo mount -t efs -o tls,accesspoint=fsap-0742178f30ea59e59 fs-0729207c5d24c82bc:/ /var/www
+sudo yum install -y httpd 
+sudo systemctl start httpd
+sudo systemctl enable httpd
+sudo yum module reset php -y
+sudo yum module enable php:remi-7.4 -y
+sudo yum install -y php php-common php-mbstring php-opcache php-intl php-xml php-gd php-curl php-mysqlnd php-fpm php-json
+sudo systemctl start php-fpm
+sudo systemctl enable php-fpm
+git clone https://github.com/darey-devops/tooling.git
+cp -R tooling/html/*  /var/www/html/
+sudo setenforce Permissive
+sudo touch /var/www/html/healthstatus
+
+# Configure App connectivity to the database 
+cd /var/www/html/ && vi db_conn.php
+mysql -h terraform-20211106215650810100000006.cdqpbjkethv0.us-east-1.rds.amazonaws.com -u project15 -p 
+
+# Export the tooling_db_schema.sql
+mysql -h terraform-20211106215650810100000006.cdqpbjkethv0.us-east-1.rds.amazonaws.com -u project15 -p   < tooling_db_schema.sql
+PW - pblproject15
+
+-- Developers have given the database name to use 
+-- Developers have provided the SQL script to load into the database 
+-- Configure the server (Update httpd conf to serve PHP files instead of HTML)
+
+
+
+# Update the db_conn.php file 
+Check Terraform for the values
+  username               = "project15"
+  password               = "pblproject15"
+
+
+- Wordpress Installation
+sudo mkdir /var/www/
+sudo mount -t fs-009f02023d99262a1 /var/www/
+sudo yum install -y httpd 
+sudo systemctl start httpd
+sudo systemctl enable httpd
+sudo yum module reset php -y
+sudo yum module enable php:remi-7.4 -y
+sudo yum install -y php php-common php-mbstring php-opcache php-intl php-xml php-gd php-curl php-mysqlnd php-fpm php-json
+sudo systemctl start php-fpm
+sudo systemctl enable php-fpm
+wget http://wordpress.org/latest.tar.gz
+tar xzvf latest.tar.gz
+rm -rf latest.tar.gz
+sudo cp wordpress/wp-config-sample.php wordpress/wp-config.php
+sudo mkdir /var/www/html/
+sudo cp -R /wordpress/* /var/www/html/
+sudo touch /var/www/html/healthstatus
+sudo chcon -t httpd_sys_rw_content_t /var/www/html/ -R
+sudo systemctl restart httpd
+
+# Edit the wp-config.php file to update the DB, password, username and host
+sudo vi /var/www/html/wp-config.php
+
+
+terraform state mv aws_vpc.main module.networking.aws_vpc.main
+terraform state mv aws_subnet.PublicSubnet-1 module.networking.aws_subnet.PublicSubnet-1
